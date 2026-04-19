@@ -22,7 +22,7 @@ const PLANS = [
     name: "Enterprise", price: { month: "Custom", year: "Custom" }, sub: "",
     desc: "Custom deployment for mission-critical AI operations.",
     features: ["Unlimited API Calls", "On-Premises Deployment", "Dedicated Success Manager", "Custom Compliance Passports"],
-    cta: "Contact Sales", href: "/contact", popular: false, accent: "#8B5CF6",
+    cta: "Contact Sales", href: "/contact", popular: false, accent: "#C8A97E",
   },
 ];
 
@@ -105,7 +105,7 @@ export default function PricingPage() {
 
         {/* Footer */}
         <p style={{ textAlign: "center", marginTop: 52, fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--text-tertiary)" }}>
-          © 2026 VerifiAI Labs. All rights reserved.
+          © 2026 VerifAI Labs. All rights reserved.
         </p>
     </div>
   );

@@ -33,14 +33,14 @@ export default function Header() {
     >
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3">
         {/* Brand */}
-        <Link href="/" className="flex items-center gap-2.5 group" aria-label="VerifiAI home">
+        <Link href="/" className="flex items-center gap-2.5 group" aria-label="VerifAI home">
           <ShieldCheck
             className="h-6 w-6 transition-transform group-hover:rotate-12"
             style={{ color: "var(--accent)" }}
             aria-hidden="true"
           />
           <span className="text-xl font-semibold tracking-tight" style={{ color: "var(--text)", fontFamily: "Instrument Serif, serif" }}>
-            Verifi<span style={{ color: "var(--accent)" }}>AI</span>
+            Verif<span style={{ color: "var(--accent)" }}>AI</span>
           </span>
         </Link>
 

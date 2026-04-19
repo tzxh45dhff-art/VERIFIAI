@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { AlertCircle, XCircle, Loader2, Sliders, ArrowRight } from "lucide-react";
@@ -257,6 +257,10 @@ export default function ContestPage() {
 }
 
 function ClaimContest({ claim, value, onChange }: { claim: AuditClaim; value: string; onChange: (v: string) => void }) {
+  // Local state for textarea to prevent parent re-renders on every keystroke (cursor loss fix)
+  const [localValue, setLocalValue] = useState(value);
+  const [file, setFile] = useState<File | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const isHalluc   = claim.classification === "HALLUCINATION";
   const isAnswered = value.trim().length > 0;
   const color      = isHalluc ? "var(--hallucination)" : "var(--unverified)";
@@ -302,7 +306,7 @@ function ClaimContest({ claim, value, onChange }: { claim: AuditClaim; value: st
           display: "flex", alignItems: "center", justifyContent: "space-between",
         }}>
           <span style={{ fontSize: 13, color: "var(--text-secondary)" }}>{value}</span>
-          <button onClick={() => onChange("")} style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer", fontSize: 12 }}>Edit</button>
+          <button onClick={() => { onChange(""); setLocalValue(""); }} style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer", fontSize: 12 }}>Edit</button>
         </div>
       ) : (
         <div>
@@ -311,8 +315,15 @@ function ClaimContest({ claim, value, onChange }: { claim: AuditClaim; value: st
           </label>
           <textarea
             id={`ev-${claim.id}`}
-            value={value}
-            onChange={e => onChange(e.target.value)}
+            value={localValue}
+            onChange={e => setLocalValue(e.target.value)}
+            onBlur={() => onChange(localValue)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey && localValue.trim()) {
+                e.preventDefault();
+                onChange(localValue);
+              }
+            }}
             placeholder={isHalluc ? `Correct: ${claim.source_value ?? "provide verified data"}` : "Provide supporting context or documentation…"}
             rows={3}
             style={{
@@ -327,6 +338,30 @@ function ClaimContest({ claim, value, onChange }: { claim: AuditClaim; value: st
           <p style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--text-muted)", marginTop: 4 }}>
             {isHalluc ? "Correct the hallucinated claim with verified data." : "Provide context or supporting documentation."}
           </p>
+          <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <button type="button" onClick={() => inputRef.current?.click()} className="btn-ghost">
+                📎 Attach proof
+              </button>
+              <input 
+                ref={inputRef}
+                type="file" 
+                style={{ display: 'none' }}
+                accept=".pdf,.png,.jpg,.jpeg"
+                onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+              />
+              {file && <span style={{ fontSize: 13, color: 'var(--text-secondary)', marginLeft: 8, cursor: 'pointer' }} onClick={() => setFile(null)}>{file.name} ×</span>}
+            </div>
+            <button 
+              type="button"
+              className="btn-primary"
+              style={{ padding: '6px 16px', fontSize: 13, height: 'auto', minHeight: 32 }}
+              onClick={() => onChange(localValue)}
+              disabled={!localValue.trim()}
+            >
+              Save
+            </button>
+          </div>
         </div>
       )}
     </div>
@@ -338,6 +373,7 @@ const MOCK_REEVAL = {
   delta_items: [
     { field: "Years in Business", old_value: "< 1 Year (Hallucinated)", new_value: "3 Years (Verified)", old_risk_contribution: 35, new_risk_contribution: 11, delta: -24, explanation: "Correcting to 3 years moves applicant past the 2-year minimum tenure threshold." },
     { field: "Bias Adjustment", old_value: "Rural penalty (+15)", new_value: "Bias flag applied (−8)", old_risk_contribution: 15, new_risk_contribution: 7, delta: -8, explanation: "Rural AgriTech demographic has known training data gap. Supervisor bias correction applied." },
+    { field: "Market Claim", old_value: "18% default rate spike (Unverified)", new_value: "Claim removed", old_risk_contribution: 24, new_risk_contribution: 0, delta: -24, explanation: "Unverified market claim removed from risk scoring as it had no source basis." },
   ],
   old_total_score: 85, new_total_score: 29, threshold: 50,
   old_decision: "DENIED", new_decision: "APPROVED", decision_flipped: true,

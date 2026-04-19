@@ -9,30 +9,31 @@ import { fadeInUp, staggerContainer } from "@/lib/motion";
 
 const Globe = dynamic(() => import("@/components/hero/Globe"), { ssr: false });
 
-function useCountUp(target: number, duration = 2200) {
+function useCountUp(target: number, decimals = 0, duration = 2200) {
   const [val, setVal] = useState(0);
   const ref = useRef<HTMLParagraphElement>(null);
   const inView = useInView(ref, { once: true });
   useEffect(() => {
     if (!inView) return;
     const start = Date.now();
+    const factor = Math.pow(10, decimals);
     const tick = () => {
       const p = Math.min((Date.now() - start) / duration, 1);
       const eased = 1 - Math.pow(1 - p, 3);
-      setVal(Math.floor(eased * target));
+      setVal(Math.round(eased * target * factor) / factor);
       if (p < 1) requestAnimationFrame(tick);
     };
     requestAnimationFrame(tick);
-  }, [inView, target, duration]);
+  }, [inView, target, decimals, duration]);
   return { val, ref };
 }
 
-function StatCounter({ target, suffix = "", label }: { target: number; suffix?: string; label: string }) {
-  const { val, ref } = useCountUp(target);
+function StatCounter({ target, suffix = "", label, decimals = 0 }: { target: number; suffix?: string; label: string; decimals?: number }) {
+  const { val, ref } = useCountUp(target, decimals);
   return (
     <div style={{ textAlign: "center" }}>
       <p ref={ref} style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 40, fontWeight: 700, color: "var(--accent-cyan)" }} aria-live="polite">
-        {val.toLocaleString()}{suffix}
+        {decimals > 0 ? val.toFixed(decimals) : val.toLocaleString()}{suffix}
       </p>
       <p style={{ fontFamily: "Syne, sans-serif", fontSize: 13, color: "var(--text-secondary)", marginTop: 4 }}>{label}</p>
     </div>
@@ -41,27 +42,27 @@ function StatCounter({ target, suffix = "", label }: { target: number; suffix?: 
 
 const PROBLEMS = [
   {
-    icon: Eye, color: "#EF4444", bg: "rgba(239,68,68,0.08)", border: "rgba(239,68,68,0.2)",
+    icon: Eye, color: "#A86060", bg: "rgba(168,96,96,0.1)", border: "rgba(168,96,96,0.3)",
     tag: "HALLUCINATION", title: "LLMs Hallucinate. Constantly.",
     body: "In a 2024 Stanford evaluation, large language models fabricated factual claims in 27% of generated documents — citing non-existent studies, inventing statistics, and contradicting source data with total confidence.\n\nWhen an AI writes your loan rejection, your hiring assessment, or your medical report — and gets the facts wrong — there is no accountability layer to catch it.\n\nUntil now.",
     stat: "847", statLabel: "Hallucinations caught this month",
   },
   {
-    icon: Scale, color: "#F59E0B", bg: "rgba(245,158,11,0.08)", border: "rgba(245,158,11,0.2)",
+    icon: Scale, color: "#B89060", bg: "rgba(184,144,96,0.1)", border: "rgba(184,144,96,0.3)",
     tag: "BIAS", title: "Your Training Data Is a Liability.",
-    body: "Under EU AI Act Article 10, organizations deploying high-risk AI must demonstrate that training datasets are free from statistical bias before deployment.\n\nMost teams only discover bias after deployment — when denial rates diverge by 50+ percentage points across demographic groups, and regulatory investigations begin.\n\nVerifiAI maps bias before your model ships.",
+    body: "Under EU AI Act Article 10, organizations deploying high-risk AI must demonstrate that training datasets are free from statistical bias before deployment.\n\nMost teams only discover bias after deployment — when denial rates diverge by 50+ percentage points across demographic groups, and regulatory investigations begin.\n\nVerifAI maps bias before your model ships.",
     stat: "1,203", statLabel: "Bias flags raised across datasets",
   },
   {
-    icon: Lock, color: "#3B82F6", bg: "rgba(59,130,246,0.08)", border: "rgba(59,130,246,0.2)",
+    icon: Lock, color: "#C8A97E", bg: "rgba(200,169,126,0.08)", border: "rgba(200,169,126,0.25)",
     tag: "RECOURSE", title: "Denial Without Explanation Is Illegal.",
-    body: "GDPR Article 22 grants individuals the right not to be subject to solely automated decisions. The EU AI Act extends this to require meaningful explanations and recourse mechanisms for high-risk AI systems.\n\nA black-box denial is no longer legally acceptable. Every automated decision must be contestable, explainable, and auditable.\n\nVerifiAI provides the infrastructure for this.",
+    body: "GDPR Article 22 grants individuals the right not to be subject to solely automated decisions. The EU AI Act extends this to require meaningful explanations and recourse mechanisms for high-risk AI systems.\n\nA black-box denial is no longer legally acceptable. Every automated decision must be contestable, explainable, and auditable.\n\nVerifAI provides the infrastructure for this.",
     stat: "312", statLabel: "Decisions successfully reversed",
   },
 ];
 
 const STEPS = [
-  { n: "01", title: "Upload Your Document or Dataset", body: "Upload an AI-generated report, rejection letter, or training dataset. VerifiAI accepts PDF, CSV, JSON, and plain text. The analysis begins immediately." },
+  { n: "01", title: "Upload Your Document or Dataset", body: "Upload an AI-generated report, rejection letter, or training dataset. VerifAI accepts PDF, CSV, JSON, and plain text. The analysis begins immediately." },
   { n: "02", title: "Our Engines Analyze with Claude + ML", body: "Hallucination Audit uses Claude for closed-book fact-checking plus live web verification. Bias Cartography uses sklearn statistical tests on your dataset — no LLM, pure math." },
   { n: "03", title: "Review the Audit Report", body: "Every claim is color-coded: Verified (green), Unverified (amber), Hallucinated (red), Web-Contradicted (orange). See exact source fields and confidence scores." },
   { n: "04", title: "Contest, Correct, and Export", body: "Submit counter-evidence against flagged claims. Force a re-evaluation. Download your EU AI Act Compliance Passport. Case saved to audit history." },
@@ -69,7 +70,7 @@ const STEPS = [
 
 const TESTIMONIALS = [
   {
-    quote: "VerifiAI caught 14 hallucinations in our AI underwriting reports that we would have missed entirely. It's now mandatory in our pre-deployment checklist.",
+    quote: "VerifAI caught 14 hallucinations in our AI underwriting reports that we would have missed entirely. It's now mandatory in our pre-deployment checklist.",
     name: "Karan Ahluwalia", role: "CTO", company: "NexaBank",
   },
   {
@@ -77,7 +78,7 @@ const TESTIMONIALS = [
     name: "Dr. Sneha Rao", role: "Head of AI Ethics", company: "MedVerify",
   },
   {
-    quote: "Our compliance team generates a VerifiAI Passport for every automated decision that gets contested. The EU AI Act is coming and we're ready.",
+    quote: "Our compliance team generates a VerifAI Passport for every automated decision that gets contested. The EU AI Act is coming and we're ready.",
     name: "Marcus Weber", role: "VP Risk", company: "TrueHire AI",
   },
 ];
@@ -127,7 +128,7 @@ export default function LandingPage() {
               </span>
             </motion.h1>
             <motion.p variants={fadeInUp} style={{ fontFamily: "Lora, serif", fontSize: 18, lineHeight: 1.7, color: "var(--text-secondary)", marginBottom: 36, maxWidth: 520 }}>
-              VerifiAI is the trust layer between AI systems and the humans they affect. Detect hallucinations. Map dataset bias. Contest automated decisions. All in one platform.
+              VerifAI is the trust layer between AI systems and the humans they affect. Detect hallucinations. Map dataset bias. Contest automated decisions. All in one platform.
             </motion.p>
             <motion.div variants={fadeInUp} style={{ display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap", marginBottom: 56 }}>
               <Link href="/login">
@@ -151,18 +152,54 @@ export default function LandingPage() {
             </motion.div>
           </motion.div>
 
-          {/* Right — Globe */}
-          <div style={{ height: 500, position: "relative" }} aria-hidden="true">
-            <Globe />
-            {/* Floating audit card */}
+          {/* ── RIGHT COLUMN — large centred globe ── */}
+          <div
+            aria-hidden="true"
+            style={{
+              position: "relative",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              height: 600,
+            }}
+          >
+            {/* Globe fills the entire right column */}
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              {/*
+                The Globe canvas renders at 100% of its container.
+                We give the container an explicit size so Three.js
+                receives a concrete pixel size to work with.
+                600 × 600 puts it front-and-centre in the right column.
+              */}
+              <div style={{ width: 600, height: 600 }}>
+                <Globe />
+              </div>
+            </div>
+
+            {/* Floating audit card — sits on top of the globe */}
             <motion.div
               animate={{ y: [0, -10, 0] }}
               transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
               style={{
-                position: "absolute", bottom: 60, left: -20, zIndex: 10,
-                background: "var(--bg-elevated)", border: "1px solid var(--bg-border)",
-                borderRadius: 12, padding: "14px 18px", boxShadow: "0 20px 40px rgba(0,0,0,0.4)",
+                position: "absolute",
+                bottom: 64,
+                left: 0,
+                background: "var(--bg-elevated)",
+                border: "1px solid var(--bg-border)",
+                borderLeft: "3px solid var(--accent-gold, #C8A97E)",
+                borderRadius: 12,
+                padding: "14px 18px",
+                boxShadow: "0 20px 40px rgba(0,0,0,0.4)",
                 minWidth: 240,
+                zIndex: 2,
               }}
             >
               <p style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 10, color: "var(--accent-cyan)", marginBottom: 8 }}>● LIVE AUDIT — APP-7842</p>
@@ -172,7 +209,14 @@ export default function LandingPage() {
                   { text: "Less than 1 year revenue history", cls: "claim-hallucination" },
                   { text: "Market conditions volatile", cls: "claim-unverified" },
                 ].map((c, i) => (
-                  <motion.span key={i} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1 + i * 0.8 }} className={c.cls} style={{ fontSize: 11, display: "block" }}>
+                  <motion.span
+                    key={i}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 1 + i * 0.8 }}
+                    className={c.cls}
+                    style={{ fontSize: 11, display: "block" }}
+                  >
                     {c.text}
                   </motion.span>
                 ))}
@@ -188,7 +232,7 @@ export default function LandingPage() {
           <StatCounter target={2847} label="Hallucinations Caught" />
           <StatCounter target={1203} label="Bias Flags Raised" />
           <StatCounter target={847} label="Decisions Reversed" />
-          <StatCounter target={991} suffix="%" label="Audit Accuracy" />
+          <StatCounter target={99.1} suffix="%" label="Audit Accuracy" decimals={1} />
         </div>
       </section>
 
@@ -349,7 +393,7 @@ export default function LandingPage() {
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
               <ShieldCheck style={{ color: "var(--accent-blue)", width: 20, height: 20 }} aria-hidden="true" />
-              <span style={{ fontFamily: "Syne, sans-serif", fontWeight: 800, fontSize: 18, color: "var(--text-primary)" }}>Verifi<span style={{ color: "var(--accent-cyan)" }}>AI</span></span>
+              <span style={{ fontFamily: "Syne, sans-serif", fontWeight: 800, fontSize: 18, color: "var(--text-primary)" }}>Verif<span style={{ color: "var(--accent-cyan)" }}>AI</span></span>
             </div>
             <p style={{ fontFamily: "Lora, serif", fontSize: 13, color: "var(--text-tertiary)", maxWidth: 240 }}>The trust layer between AI systems and the humans they affect.</p>
           </div>
@@ -369,7 +413,7 @@ export default function LandingPage() {
         </div>
         <div style={{ maxWidth: 1280, margin: "24px auto 0", paddingTop: 24, borderTop: "1px solid var(--bg-border)", textAlign: "center" }}>
           <p style={{ fontFamily: "JetBrains Mono, monospace", fontSize: 12, color: "var(--text-tertiary)" }}>
-            © 2026 VerifiAI. All rights reserved. Built for AI accountability. EU AI Act · GDPR Article 22 · ECOA.
+            © 2026 VerifAI. All rights reserved. Built for AI accountability. EU AI Act · GDPR Article 22 · ECOA.
           </p>
         </div>
       </footer>

@@ -27,6 +27,8 @@ export default function BiasPage() {
   const [narrative, setNarrative] = useState("");
   const [loadingStep, setLoadingStep] = useState(-1);
   const [narrativeLoading, setNarrativeLoading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadedFile, setUploadedFile] = useState<string | null>(null);
 
   const runAnalysis = useCallback(async () => {
     setReport(null);
@@ -35,16 +37,21 @@ export default function BiasPage() {
       await new Promise((r) => setTimeout(r, 600 + i * 200));
     }
     try {
-      const r = await api.getBiasReport();
+      const r = await Promise.race([
+        api.getBiasReport(),
+        new Promise((_, rej) => setTimeout(() => rej(new Error("Timeout")), 2000))
+      ]) as any;
       setReport(r);
       setBiasFlags(r.bias_flags);
       setBiasReport(r);
       setLoadingStep(-1);
-    } catch {
+    } catch (e) {
+      console.error("API failed, falling back to MOCK_REPORT", e);
       toast.error("Using demo data — backend connection failed");
-      setReport(MOCK_REPORT);
-      setBiasFlags(MOCK_REPORT.bias_flags);
-      setBiasReport(MOCK_REPORT);
+      const fallback = { ...MOCK_REPORT };
+      setReport(fallback);
+      setBiasFlags(fallback.bias_flags);
+      setBiasReport(fallback);
       setLoadingStep(-1);
     }
   }, [setBiasFlags, setBiasReport]);
@@ -95,11 +102,30 @@ export default function BiasPage() {
           <BarChart3 size={40} style={{ color: "var(--text-muted)", margin: "0 auto 16px" }} aria-hidden="true" />
           <h2 style={{ fontSize: 18, fontWeight: 600, color: "var(--text-primary)", marginBottom: 8 }}>Upload or Load Dataset</h2>
           <p style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 32, maxWidth: 400, margin: "0 auto 28px" }}>Drop a CSV / JSON / Parquet file, or use the 10,000-row demo dataset to see the analysis.</p>
+          {uploadedFile && (
+            <p style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--accent)", marginBottom: 16 }}>
+              📄 {uploadedFile} selected — running demo analysis
+            </p>
+          )}
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
             <button onClick={runAnalysis} className="btn-primary">
               Load Demo Dataset (10,000 rows)
             </button>
-            <button className="btn-secondary">Upload CSV / JSON</button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".csv,.json,.parquet"
+              style={{ display: "none" }}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  setUploadedFile(file.name);
+                  toast.success(`File "${file.name}" selected — running demo analysis`);
+                  runAnalysis();
+                }
+              }}
+            />
+            <button className="btn-secondary" onClick={() => fileInputRef.current?.click()}>Upload CSV / JSON</button>
           </div>
         </div>
       )}
@@ -136,13 +162,13 @@ export default function BiasPage() {
             {/* Rural Rate — 2 cols wide, key insight */}
             <div className="card" style={{
               padding: 24, height: 116,
-              borderLeft: "3px solid #EF4444",
-              borderColor: "rgba(239,68,68,0.30)",
-              background: "rgba(239,68,68,0.05)",
+              borderLeft: "3px solid var(--hallucination)",
+              borderColor: "rgba(168,96,96,0.30)",
+              background: "rgba(168,96,96,0.05)",
             }}>
               <p style={{ fontFamily: "var(--font-mono)", fontSize: 11, fontWeight: 600, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>Rural Approval Rate</p>
               <div style={{ display: "flex", alignItems: "baseline", gap: 16 }}>
-                <p style={{ fontFamily: "var(--font-mono)", fontSize: 64, fontWeight: 700, lineHeight: 1, color: "#EF4444", marginTop: 2 }} aria-label="Rural approval rate: 11.3%">11.3%</p>
+                <p style={{ fontFamily: "var(--font-mono)", fontSize: 64, fontWeight: 700, lineHeight: 1, color: "var(--hallucination)", marginTop: 2 }} aria-label="Rural approval rate: 11.3%">11.3%</p>
                 <p style={{ fontFamily: "var(--font-mono)", fontSize: 13, color: "var(--text-muted)" }}>vs {report.overall_approval_rate}% overall</p>
               </div>
             </div>
@@ -162,7 +188,7 @@ export default function BiasPage() {
                   <Tooltip contentStyle={{ background: "var(--bg-elevated)", border: "1px solid var(--bg-border)", borderRadius: 8, fontFamily: "var(--font-mono)", fontSize: 12, boxShadow: "var(--shadow-lg)" }} formatter={(v: unknown) => [`${v}%`, "Approval"]} />
                   <Bar dataKey="approval_rate" radius={[4, 4, 0, 0]}>
                     {report.region_stats.map((r) => (
-                      <Cell key={r.region} fill={r.risk_level === "HIGH" ? "#EF4444" : r.risk_level === "MEDIUM" ? "#F59E0B" : "#3B82F6"} />
+                      <Cell key={r.region} fill={r.risk_level === "HIGH" ? "#A86060" : r.risk_level === "MEDIUM" ? "#B89060" : "#9FAFCA"} />
                     ))}
                   </Bar>
                 </BarChart>
@@ -180,7 +206,7 @@ export default function BiasPage() {
                   <Tooltip contentStyle={{ background: "var(--bg-elevated)", border: "1px solid var(--bg-border)", borderRadius: 8, fontFamily: "var(--font-mono)", fontSize: 12, boxShadow: "var(--shadow-lg)" }} />
                   <Bar dataKey="applications" radius={[0, 4, 4, 0]} barSize={24}>
                     {report.industry_stats.map((ind) => (
-                      <Cell key={ind.industry} fill={ind.risk_level === "HIGH" ? "#EF4444" : ind.risk_level === "MEDIUM" ? "#F59E0B" : "#06B6D4"} />
+                      <Cell key={ind.industry} fill={ind.risk_level === "HIGH" ? "#A86060" : ind.risk_level === "MEDIUM" ? "#B89060" : "#9FAFCA"} />
                     ))}
                   </Bar>
                 </BarChart>

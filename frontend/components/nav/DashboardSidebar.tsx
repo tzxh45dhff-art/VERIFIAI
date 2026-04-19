@@ -26,7 +26,7 @@ const SYSTEM_NAV = [
 const PLAN_STYLE: Record<string, { color: string; bg: string; border: string }> = {
   starter:    { color: "var(--text-secondary)", bg: "var(--bg-elevated)", border: "var(--bg-border)" },
   pro:        { color: "var(--accent)",         bg: "var(--accent-subtle)", border: "var(--accent-border)" },
-  enterprise: { color: "#8B5CF6",               bg: "rgba(139,92,246,0.10)", border: "rgba(139,92,246,0.25)" },
+  enterprise: { color: "var(--accent-gold)",    bg: "var(--accent-gold-tint)", border: "rgba(200,169,126,0.25)" },
 };
 
 export default function DashboardSidebar() {

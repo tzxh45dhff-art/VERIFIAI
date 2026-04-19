@@ -4,11 +4,11 @@ import { ThemeProvider } from "@/components/shared/ThemeProvider";
 import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
-  title: { default: "VerifiAI — AI Accountability Platform", template: "%s | VerifiAI" },
+  title: { default: "VerifAI — AI Accountability Platform", template: "%s | VerifAI" },
   description: "The world's first end-to-end AI Accountability Operating System. Detect hallucinations, map dataset bias, and contest automated decisions.",
   keywords: ["AI accountability", "hallucination detection", "bias cartography", "EU AI Act compliance"],
   openGraph: {
-    title: "VerifiAI — AI Accountability Platform",
+    title: "VerifAI — AI Accountability Platform",
     description: "Detect hallucinations. Map dataset bias. Contest automated decisions.",
     type: "website",
   },

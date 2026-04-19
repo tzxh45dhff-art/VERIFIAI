@@ -15,9 +15,9 @@ interface Props {
 }
 
 const TREND_COLOR = {
-  up:   "#10B981",
-  down: "#EF4444",
-  warn: "#F59E0B",
+  up:   "var(--verified)",
+  down: "var(--hallucination)",
+  warn: "var(--unverified)",
 };
 
 export function StatCard({
@@ -27,45 +27,54 @@ export function StatCard({
   return (
     <div
       className="card"
-      style={{ padding: 24, height, display: "flex", flexDirection: "column", ...style }}
+      style={{
+        padding: 24,
+        minHeight: 120,
+        display: "flex",
+        flexDirection: "column",
+        minWidth: 0,
+        ...style,
+      }}
     >
-      {/* Row 1: label + icon — 4px gap to number below */}
+      {/* Row 1: label + icon */}
       <div style={{
         display: "flex", alignItems: "center", justifyContent: "space-between",
-        marginBottom: 4,
+        marginBottom: 4, minWidth: 0,
       }}>
         <span style={{
           fontFamily: "var(--font-mono)", fontSize: 11, fontWeight: 600,
           letterSpacing: "0.06em", textTransform: "uppercase",
           color: "var(--text-muted)",
+          overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
         }}>
           {label}
         </span>
         {icon && (
-          <span style={{ color: "var(--text-muted)" }} aria-hidden="true">{icon}</span>
+          <span style={{ color: "var(--accent-brown)", flexShrink: 0 }} aria-hidden="true">{icon}</span>
         )}
       </div>
 
-      {/* Row 2: number — sized by prop */}
+      {/* Row 2: number — colored with accent-blue for data values */}
       <p style={{
         fontFamily: "var(--font-mono)",
-        fontSize: numberSize,
+        fontSize: 44,
         fontWeight: 700,
         lineHeight: 1,
         color: "var(--text-primary)",
         letterSpacing: "-0.02em",
-        marginBottom: 12, /* 12px gap before trend */
+        marginBottom: 12,
         marginTop: 2,
       }}>
         {value}{suffix}
       </p>
 
-      {/* Row 3: trend — plain colored text */}
+      {/* Row 3: trend */}
       {trend && (
         <p style={{
           fontFamily: "var(--font-mono)", fontSize: 12,
           color: TREND_COLOR[trendDir], fontWeight: 500,
           marginTop: "auto",
+          overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
         }}>
           {trend}
         </p>

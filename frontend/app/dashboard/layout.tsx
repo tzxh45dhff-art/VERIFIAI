@@ -1,5 +1,6 @@
 import DashboardSidebar from "@/components/nav/DashboardSidebar";
 import DashboardTopBar from "@/components/nav/DashboardTopBar";
+import { AIChatWidget } from "@/components/chat/AIChatWidget";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -11,6 +12,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {children}
         </main>
       </div>
+      <AIChatWidget />
     </div>
   );
 }

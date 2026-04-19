@@ -44,7 +44,7 @@ export default function LoginPage() {
         isAuthenticated: true,
         user: {
           id: "u1", name: "Arjun Mehta", email: data.email,
-          organization: "VerifiAI Labs", role: "admin", plan: "pro",
+          organization: "VerifAI Labs", role: "admin", plan: "pro",
           casesAnalyzed: 24, hallucinationsFound: 89, decisionsFlipped: 31,
           joinedAt: "2025-01-01",
         }
@@ -123,7 +123,7 @@ export default function LoginPage() {
           marginTop: "auto", paddingTop: 16,
         }}>
           <span>SYS.AUTH.RUNNER_v2</span>
-          <span>© 2026 VerifiAI Labs</span>
+          <span>© 2026 VerifAI Labs</span>
         </div>
       </div>
 

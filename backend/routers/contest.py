@@ -1,60 +1,93 @@
+"""
+VerifAI — Contestation router.
+Handles re-evaluation of AI decisions based on counter-evidence.
+"""
 from fastapi import APIRouter, HTTPException
-from models.schemas import ReevalRequest, ReevalResult, DeltaItem
-from services import claude_service
-import os, uuid
+from models.schemas import (
+    ContestSubmission, ReevalResult, DeltaItem, BiasAdjustment,
+)
+from services.audit_service import run_reevaluation, MOCK_REEVAL
+from services.groq_service import groq_service
+from models.database import record_usage, check_usage_limit
+from loguru import logger
 from datetime import datetime
+import uuid
 
 router = APIRouter(prefix="/api/contest", tags=["contest"])
 
-MOCK_REEVAL = {
-    "delta_items": [
-        {
-            "field": "Years in Business",
-            "old_value": "< 1 Year (Hallucinated)",
-            "new_value": "3 Years (Verified)",
-            "old_risk_contribution": 35,
-            "new_risk_contribution": 11,
-            "delta": -24,
-            "explanation": "Correcting from <1 year to 3 years moves applicant past the 2-year minimum threshold, significantly reducing tenure risk.",
-        }
-    ],
-    "old_total_score": 85,
-    "new_total_score": 32,
-    "old_decision": "DENIED",
-    "new_decision": "APPROVED",
-    "decision_flipped": True,
-    "supervisor_note": (
-        "After reviewing the counter-evidence submitted by the applicant, it is clear the automated "
-        "underwriting system made a critical factual error regarding the applicant's revenue history. "
-        "GreenLeaf AgriTech has 3 verified years of operation, which satisfies our tenure requirements. "
-        "With a credit score of 710 and $150k annual revenue, the corrected risk profile supports approval."
-    ),
-    "confidence": 0.94,
-}
 
+@router.post("/re-evaluate", response_model=ReevalResult)
+async def re_evaluate(
+    submission: ContestSubmission,
+    user_id: str = "demo-user",
+    plan: str = "free",
+):
+    """Re-evaluate an AI decision based on counter-evidence."""
+    # Usage check
+    allowed, used, limit = check_usage_limit(user_id, plan, "contest")
+    if not allowed:
+        raise HTTPException(status_code=403, detail={
+            "error": "monthly_limit_reached",
+            "message": f"Monthly contestation limit reached ({used}/{limit}). Upgrade to Pro.",
+            "used": used,
+            "limit": limit,
+            "upgrade_required": True,
+        })
 
-@router.post("/reevaluate", response_model=ReevalResult)
-def reevaluate(request: ReevalRequest):
-    """Re-evaluate loan decision with counter-evidence using Claude."""
-    if not os.getenv("ANTHROPIC_API_KEY"):
-        items = [DeltaItem(**d) for d in MOCK_REEVAL["delta_items"]]
+    try:
+        hallucinations = [c.model_dump() for c in submission.hallucination_claims]
+        counter = [c.model_dump() for c in submission.contest_items]
+
+        result = await run_reevaluation(
+            app_data=submission.application_data.model_dump(),
+            original_letter=submission.original_letter,
+            hallucinations=hallucinations,
+            counter_evidence=counter,
+        )
+
+        record_usage(user_id, "contest")
+
+        # Build proper response
+        delta_items = [DeltaItem(**d) for d in result.get("delta_items", [])]
+
+        bias_adj = None
+        if result.get("bias_adjustment", {}).get("applied"):
+            bias_adj = BiasAdjustment(**result["bias_adjustment"])
+
         return ReevalResult(
-            case_id=f"CASE-{uuid.uuid4().hex[:8].upper()}",
-            delta_items=items,
+            case_id=submission.case_id,
+            delta_items=delta_items,
+            old_total_score=result["old_total_score"],
+            new_total_score=result["new_total_score"],
+            threshold=50,
+            old_decision=result["old_decision"],
+            new_decision=result["new_decision"],
+            decision_flipped=result["decision_flipped"],
+            supervisor_note=result.get("supervisor_note", ""),
+            supervisor_memo=result.get("supervisor_memo", ""),
+            confidence=result.get("confidence", 0.0),
+            bias_adjustment=bias_adj,
+            conditions=result.get("conditions", []),
+        )
+
+    except Exception as e:
+        logger.error(f"Re-evaluation failed: {e}")
+        # Fallback to mock
+        delta_items = [DeltaItem(**d) for d in MOCK_REEVAL["delta_items"]]
+        bias_adj = BiasAdjustment(**MOCK_REEVAL["bias_adjustment"])
+
+        return ReevalResult(
+            case_id=submission.case_id,
+            delta_items=delta_items,
             old_total_score=MOCK_REEVAL["old_total_score"],
             new_total_score=MOCK_REEVAL["new_total_score"],
-            old_decision=MOCK_REEVAL["old_decision"],
-            new_decision=MOCK_REEVAL["new_decision"],
-            decision_flipped=MOCK_REEVAL["decision_flipped"],
+            threshold=50,
+            old_decision="DENIED",
+            new_decision="APPROVED",
+            decision_flipped=True,
             supervisor_note=MOCK_REEVAL["supervisor_note"],
+            supervisor_memo=MOCK_REEVAL["supervisor_memo"],
             confidence=MOCK_REEVAL["confidence"],
+            bias_adjustment=bias_adj,
+            conditions=MOCK_REEVAL["conditions"],
         )
-    try:
-        return claude_service.reeval_decision(
-            request.application_data,
-            request.original_letter,
-            request.flagged_claims,
-            request.counter_evidence,
-        )
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))

@@ -1,4 +1,4 @@
-// All TypeScript interfaces for VerifiAI
+// All TypeScript interfaces for VerifAI
 
 export interface ApplicationData {
   application_id: string;

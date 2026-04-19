@@ -53,7 +53,7 @@ export default function SettingsPage() {
               <div className="card" style={{ padding: 28 }} role="tabpanel" aria-label="Profile settings">
                 <div style={{ display: "flex", alignItems: "flex-start", gap: 20, marginBottom: 24 }}>
                   {/* Avatar */}
-                  <div style={{ width: 64, height: 64, borderRadius: "50%", background: "linear-gradient(135deg, var(--accent) 0%, #06B6D4 100%)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--font-mono)", fontWeight: 700, fontSize: 24, color: "#000", flexShrink: 0 }} aria-hidden="true">
+                  <div style={{ width: 64, height: 64, borderRadius: "50%", background: "linear-gradient(135deg, var(--accent-gold) 0%, var(--accent-brown) 100%)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--font-mono)", fontWeight: 700, fontSize: 24, color: "#0E0C0A", flexShrink: 0 }} aria-hidden="true">
                     {user.name[0].toUpperCase()}
                   </div>
                   <div>

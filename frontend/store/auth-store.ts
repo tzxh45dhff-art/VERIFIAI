@@ -25,7 +25,7 @@ interface AuthStore {
 const MOCK_USERS: (User & { password: string })[] = [
   {
     id: "u1", name: "Arjun Mehta", email: "demo@verifiai.com", password: "demo123",
-    role: "admin", organization: "VerifiAI Labs", plan: "pro",
+    role: "admin", organization: "VerifAI Labs", plan: "pro",
     joinedAt: "2024-09-01", casesAnalyzed: 47, hallucinationsFound: 134, decisionsFlipped: 23,
   },
   {

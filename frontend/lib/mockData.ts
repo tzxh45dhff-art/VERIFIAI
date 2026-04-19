@@ -1,5 +1,5 @@
 // ============================================================
-// VerifiAI — Mock Data Layer
+// VerifAI — Mock Data Layer
 // All deterministic. No LLM needed for the core demo flow.
 // ============================================================
 

@@ -14,7 +14,7 @@ const FALLBACK: ReevalResult = {
   delta_items: [
     { field: "Years in Business", old_value: "< 1 Year (Hallucinated)", new_value: "3 Years (Verified)", old_risk_contribution: 35, new_risk_contribution: 11, delta: -24, explanation: "Correcting to 3 years moves applicant past the 2-year minimum threshold." },
     { field: "Bias Adjustment",   old_value: "Rural penalty (+15)", new_value: "Bias correction applied", old_risk_contribution: 15, new_risk_contribution: 7, delta: -8, explanation: "Rural AgriTech demographic has known training data gap; supervisor bias correction applied." },
-    { field: "Market Claim",      old_value: "18% default rate spike (Unverified)", new_value: "Claim removed", old_risk_contribution: 24, new_risk_contribution: 11, delta: -13, explanation: "Unverified market claim removed from risk scoring as it had no source basis." },
+    { field: "Market Claim",      old_value: "18% default rate spike (Unverified)", new_value: "Claim removed", old_risk_contribution: 24, new_risk_contribution: 0, delta: -24, explanation: "Unverified market claim removed from risk scoring as it had no source basis." },
   ],
   old_total_score: 85, new_total_score: 29, threshold: 50,
   old_decision: "DENIED", new_decision: "APPROVED", decision_flipped: true,
@@ -37,7 +37,7 @@ export default function ResultPage() {
       confettiFired.current = true;
       import("canvas-confetti").then(m => {
         setTimeout(() => {
-          m.default({ particleCount: 220, spread: 80, origin: { y: 0.5 }, colors: ["#059669","#10B981","#D1FAE5","#F59E0B"] });
+          m.default({ particleCount: 220, spread: 80, origin: { y: 0.5 }, colors: ["#C8A97E","#7E9E87","#9FAFCA","#F5F1E8"] });
         }, 600);
       });
     }
@@ -255,7 +255,7 @@ export default function ResultPage() {
               )}
               <div style={{ marginTop: 24, paddingTop: 16, borderTop: "1px solid var(--bg-border)" }}>
                 <p style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--text-muted)" }}>
-                  VerifiAI Accountability Engine v1.0 · Reviewed by {user?.name} · {user?.organization}
+                  VerifAI Accountability Engine v1.0 · Reviewed by {user?.name} · {user?.organization}
                 </p>
               </div>
             </div>

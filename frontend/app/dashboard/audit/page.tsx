@@ -106,8 +106,8 @@ export default function AuditPage() {
     VERIFIED: "var(--verified)",
     UNVERIFIED: "var(--unverified)",
     HALLUCINATION: "var(--hallucination)",
-    WEB_VERIFIED: "#06B6D4",
-    WEB_CONTRADICTED: "#F97316",
+    WEB_VERIFIED: "var(--web-verified)",
+    WEB_CONTRADICTED: "var(--web-contradicted)",
   };
 
   return (
