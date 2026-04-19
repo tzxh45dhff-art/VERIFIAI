@@ -19,17 +19,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" suppressHydrationWarning className="dark">
       <body>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-          <a
-            href="#main-content"
-            className="sr-only focus:not-sr-only"
-            style={{
-              position: "fixed", top: 8, left: 8, zIndex: 9999,
-              background: "var(--accent-blue)", color: "#fff",
-              padding: "8px 16px", borderRadius: 8, fontFamily: "Syne, sans-serif",
-            }}
-          >
-            Skip to main content
-          </a>
           {children}
           <Toaster
             theme="dark"
